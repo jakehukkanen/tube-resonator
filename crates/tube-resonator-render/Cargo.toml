@@ -1,0 +1,10 @@
+[package]
+name = "tube-resonator-render"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Offline WAV processor and regression verifier for tube-resonator-dsp"
+
+[dependencies]
+tube-resonator-dsp = { path = "../tube-resonator-dsp" }

@@ -1,0 +1,132 @@
+name: Build VST3 & CLAP Plugins
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact_name: Tube-Resonator-macOS-arm64
+          - os: windows-latest
+            artifact_name: Tube-Resonator-Windows-x64
+          - os: ubuntu-22.04
+            artifact_name: Tube-Resonator-Linux-x64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            libgl1-mesa-dev \
+            libx11-dev \
+            libx11-xcb-dev \
+            libxcb1-dev \
+            libxcb-dri2-0-dev \
+            libxcb-icccm4-dev \
+            libxcb-keysyms1-dev \
+            libxcb-randr0-dev \
+            libxcb-shape0-dev \
+            libxcb-util-dev \
+            libxcb-xfixes0-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxinerama-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            pkg-config
+
+      - name: Install Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run unit tests
+        run: cargo test --workspace
+
+      - name: Build release plugin library
+        env:
+          RUSTFLAGS: "--remap-path-prefix=${{ github.workspace }}=."
+        run: cargo build --release -p tube-resonator
+
+      - name: Package VST3 & CLAP bundles (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p "dist/Tube Resonator.vst3/Contents/MacOS"
+          mkdir -p "dist/Tube Resonator.clap/Contents/MacOS"
+          cp crates/tube-resonator/Info.plist.vst3 "dist/Tube Resonator.vst3/Contents/Info.plist" 2>/dev/null || true
+          cp target/release/libtube_resonator.dylib "dist/Tube Resonator.vst3/Contents/MacOS/Tube Resonator"
+          cp target/release/libtube_resonator.dylib "dist/Tube Resonator.clap/Contents/MacOS/Tube Resonator"
+
+          cat > "dist/Tube Resonator.vst3/Contents/Info.plist" << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleDevelopmentRegion</key>
+            <string>English</string>
+            <key>CFBundleExecutable</key>
+            <string>Tube Resonator</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.jakehukkanen.tube-resonator.vst3</string>
+            <key>CFBundleInfoDictionaryVersion</key>
+            <string>6.0</string>
+            <key>CFBundleName</key>
+            <string>Tube Resonator</string>
+            <key>CFBundlePackageType</key>
+            <string>BNDL</string>
+            <key>CFBundleSignature</key>
+            <string>????</string>
+            <key>CFBundleVersion</key>
+            <string>0.1.0</string>
+            <key>CFBundleShortVersionString</key>
+            <string>0.1.0</string>
+            <key>CSResourcesFileMapped</key>
+            <true/>
+          </dict>
+          </plist>
+          EOF
+
+          cp "dist/Tube Resonator.vst3/Contents/Info.plist" "dist/Tube Resonator.clap/Contents/Info.plist"
+          echo -n "BNDL????" > "dist/Tube Resonator.vst3/Contents/PkgInfo"
+          echo -n "BNDL????" > "dist/Tube Resonator.clap/Contents/PkgInfo"
+
+          codesign --force --deep --sign - "dist/Tube Resonator.vst3"
+          codesign --force --deep --sign - "dist/Tube Resonator.clap"
+
+      - name: Package VST3 & CLAP bundles (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p "dist/Tube Resonator.vst3/Contents/x86_64-win"
+          cp target/release/tube_resonator.dll "dist/Tube Resonator.vst3/Contents/x86_64-win/Tube Resonator.vst3"
+          cp target/release/tube_resonator.dll "dist/Tube Resonator.clap"
+
+      - name: Package VST3 & CLAP bundles (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p "dist/Tube Resonator.vst3/Contents/x86_64-linux"
+          cp target/release/libtube_resonator.so "dist/Tube Resonator.vst3/Contents/x86_64-linux/Tube Resonator.so"
+          cp target/release/libtube_resonator.so "dist/Tube Resonator.clap"
+
+      - name: Upload plugin bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/*

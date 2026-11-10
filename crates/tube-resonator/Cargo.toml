@@ -1,0 +1,15 @@
+[package]
+name = "tube-resonator"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "VST3 and CLAP waveguide tube resonator plugin"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+tube-resonator-dsp = { path = "../tube-resonator-dsp" }
+nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", features = ["assert_process_allocs", "standalone"] }
+nih_plug_vizia = { git = "https://github.com/robbert-vdh/nih-plug.git" }
