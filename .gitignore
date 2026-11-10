@@ -1,0 +1,20 @@
+# Rust / Cargo
+/target/
+/.cargo/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Local analysis scripts, test signals, and audio renders
+/analysis/
+/test_signals/
+/tools/
+/renders/
+*.pyc
+*.wav
+*.asd
+*.adv
+*.als
