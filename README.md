@@ -18,6 +18,19 @@ A waveguide tube resonator with a softening bandpass filter similar to Ableton's
 ### From GitHub Actions / Pre-Built Releases
 Cross-platform builds for **macOS (`arm64`)**, **Windows (`x86_64`)**, and **Linux (`x86_64`)** are compiled automatically via [`.github/workflows/build.yml`](./.github/workflows/build.yml).
 
+Download them from the [Releases](../../releases) page:
+- **Versioned releases** (e.g. `v0.2.0`) are the stable builds.
+- **Nightly build** is a pre-release that's rebuilt from the latest commit on `main` after every push.
+
+Each platform `.zip` contains `Tube Resonator.vst3`, `Tube Resonator.clap`, this README, and the [User Guide](./docs/USER_GUIDE.md).
+
+#### Publishing a new release (maintainers)
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+Once all three platform builds succeed, the workflow creates the `v0.2.0` GitHub Release with auto-generated release notes and the platform archives attached. Tags containing a hyphen (e.g. `v0.2.0-beta.1`) are marked as pre-releases.
+
 ### Building Locally from Source
 ```bash
 # Run unit tests
