@@ -70,6 +70,12 @@ $$f_R(t) = f_{\text{base}, R} \cdot 2^{\,\text{amount} \cdot \sin(2\pi f_{\text{
 
 where $\phi$ is the stereo `Phase` offset (`0°..360°`).
 
+**`Dirty` mode.** When enabled, the multipliers are sampled and held over $N = 32$-sample control blocks:
+
+$$f_L[n] = f_{\text{base}, L} \cdot 2^{\,\text{amount} \cdot \sin\left(2\pi f_{\text{rate}} \cdot N \lfloor n / N \rfloor / f_s\right)}$$
+
+Each block boundary changes the waveguide delay length instantly, so the cubic-interpolated read taps jump rather than glide. This adds stepping sidebands at multiples of $f_s / N$ (≈ 1.38 kHz at 44.1 kHz) and small discontinuities in the loop. They sit well below the fundamental but are lifted strongly by downstream upward compression. When `Dirty` is off, the LFO is evaluated every sample (bit-identical to the smooth formula above).
+
 ### 3.2 Wavefolded 32-Sample Stepped Decay LFO (`DecayLfo`)
 Designed specifically to generate metallic waveguide-gain transients that multiband upward/downward compressors (such as OTT) pull forward:
 

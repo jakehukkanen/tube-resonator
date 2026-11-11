@@ -4,7 +4,7 @@
 //! - **Left Section (Primary Controls)**:
 //!   - **Resonator**: `Tune` (default F1, resets to C1 on Cmd/Ctrl+Click or double-click), `Decay`, `Damping`
 //!   - **Filter**: `Filter` toggle, `Freq`, `Width`
-//!   - **Pitch LFO**: `Amount`, `Rate`, `Phase`
+//!   - **Pitch LFO**: `Dirty` toggle, `Amount`, `Rate`, `Phase`
 //!   - **Decay LFO**: `Amount`, `Rate`
 //! - **Right Section (Secondary & Output Controls)**:
 //!   - **Timbre & Detune**: `Fine`, `L/R Detune`, `Reflect`
@@ -843,12 +843,25 @@ pub(crate) fn create(
 
                     // Bottom Row: PITCH LFO (3 knobs) + DECAY LFO (2 knobs)
                     HStack::new(cx, |cx| {
-                        // Module 3: Pitch LFO (Amount, Rate, Phase)
+                        // Module 3: Pitch LFO (Dirty toggle, Amount, Rate, Phase)
                         VStack::new(cx, |cx| {
                             HStack::new(cx, |cx| {
                                 Label::new(cx, "PITCH LFO")
                                     .class("module-title")
                                     .font_weight(FontWeightKeyword::Bold);
+                                Element::new(cx)
+                                    .width(Stretch(1.0))
+                                    .height(Stretch(1.0))
+                                    .hoverable(false);
+                                LedToggleSwitch::new(
+                                    cx,
+                                    UiData::params,
+                                    |p| &p.lfo_dirty,
+                                    "DIRTY",
+                                    coral,
+                                )
+                                .height(Pixels(22.0))
+                                .width(Pixels(78.0));
                             })
                             .class("module-header")
                             .width(Stretch(1.0))

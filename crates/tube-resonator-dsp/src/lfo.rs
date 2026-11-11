@@ -6,21 +6,38 @@ use std::f64::consts::TAU;
 
 /// Stereo LFO supporting exponential sine pitch modulation (`[-amount, +amount]` octaves,
 /// where `1.0` = +/- 12 semitones).
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub struct PitchLfo {
     phase: f64,
+    /// Sample counter for the `Dirty` sample-and-hold control rate.
+    step_counter: u32,
+    /// Held `(pitch_mul_l, pitch_mul_r)` while in `Dirty` mode.
+    held: (f64, f64),
 }
+
+impl Default for PitchLfo {
+    fn default() -> Self {
+        Self::new(0.0)
+    }
+}
+
+/// Control-rate step length (in samples) used by `Dirty` mode for both LFOs.
+pub const CONTROL_STEP_SAMPLES: u32 = 32;
 
 impl PitchLfo {
     pub fn new(initial_phase_rad: f64) -> Self {
         Self {
             phase: initial_phase_rad.rem_euclid(TAU),
+            step_counter: 0,
+            held: (1.0, 1.0),
         }
     }
 
     /// Reset the LFO phase (in radians).
     pub fn set_phase_rad(&mut self, phase_rad: f64) {
         self.phase = phase_rad.rem_euclid(TAU);
+        self.step_counter = 0;
+        self.held = (1.0, 1.0);
     }
 
     /// Reset the LFO phase (in degrees, `0.0..=360.0`).
@@ -30,8 +47,41 @@ impl PitchLfo {
 
     /// Advance the LFO by one sample and return `(pitch_mul_l, pitch_mul_r)`
     /// where `f_inst = f_tune * pitch_mul`.
+    ///
+    /// When `dirty` is `true`, the multipliers are sampled once every
+    /// [`CONTROL_STEP_SAMPLES`] samples and held in between (stair-stepped control-rate
+    /// modulation). Each step makes the waveguide delay length jump, producing zipper
+    /// sidebands around `sample_rate / 32` and small discontinuities that downstream
+    /// upward compression (OTT) pulls forward. When `false`, the output is unchanged
+    /// from the smooth per-sample LFO.
     #[inline]
     pub fn next_pitch_multipliers(
+        &mut self,
+        enabled: bool,
+        amount_0_to_1: f64,
+        rate_hz: f64,
+        stereo_phase_offset_deg: f64,
+        dirty: bool,
+        sample_rate: f64,
+    ) -> (f64, f64) {
+        if !dirty {
+            self.step_counter = 0;
+            return self.compute(enabled, amount_0_to_1, rate_hz, stereo_phase_offset_deg, sample_rate);
+        }
+
+        if self.step_counter == 0 {
+            self.held =
+                self.compute(enabled, amount_0_to_1, rate_hz, stereo_phase_offset_deg, sample_rate);
+        } else {
+            self.phase = (self.phase + TAU * rate_hz / sample_rate).rem_euclid(TAU);
+        }
+        self.step_counter = (self.step_counter + 1) % CONTROL_STEP_SAMPLES;
+        self.held
+    }
+
+    /// Compute the smooth multipliers at the current phase and advance the phase one sample.
+    #[inline]
+    fn compute(
         &mut self,
         enabled: bool,
         amount_0_to_1: f64,
@@ -105,8 +155,6 @@ impl DecayLfo {
         rate_hz: f64,
         sample_rate: f64,
     ) -> f64 {
-        const CONTROL_STEP_SAMPLES: u32 = 32;
-
         if amount_0_to_1 <= 0.0 {
             self.phase = (self.phase + TAU * rate_hz / sample_rate).rem_euclid(TAU);
             self.step_counter = 0;

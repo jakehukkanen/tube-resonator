@@ -57,6 +57,9 @@ pub struct TubeResonatorPluginParams {
     #[id = "lfo_phase"]
     pub lfo_stereo_phase_deg: FloatParam,
 
+    #[id = "lfo_dirty"]
+    pub lfo_dirty: BoolParam,
+
     #[id = "dlfo_amt"]
     pub decay_lfo_amount: FloatParam,
 
@@ -212,6 +215,8 @@ impl Default for TubeResonatorPluginParams {
             .with_smoother(SmoothingStyle::Linear(10.0))
             .with_unit(" deg")
             .with_value_to_string(formatters::v2s_f32_rounded(1)),
+
+            lfo_dirty: BoolParam::new("Pitch LFO Dirty", def.lfo_dirty),
 
             decay_lfo_amount: FloatParam::new(
                 "Decay LFO Amount",
@@ -375,6 +380,7 @@ impl Plugin for TubeResonatorPlugin {
                 lfo_amount: lfo_amt,
                 lfo_rate_hz: self.params.lfo_rate_hz.smoothed.next_step(step),
                 lfo_stereo_phase_deg: self.params.lfo_stereo_phase_deg.smoothed.next_step(step),
+                lfo_dirty: self.params.lfo_dirty.value(),
                 decay_lfo_amount: self.params.decay_lfo_amount.smoothed.next_step(step),
                 decay_lfo_rate_hz: self.params.decay_lfo_rate_hz.smoothed.next_step(step),
                 filter_enabled: self.params.filter_enabled.value(),

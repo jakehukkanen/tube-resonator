@@ -47,6 +47,8 @@ Modulates the fundamental pitch of the Left and Right waveguide resonators expon
   Sets the speed of the Pitch LFO in Hz.
 - **`PHASE`** (`0.0 deg` to `360.0 deg`, default **`0.0 deg`**):
   Sets the **stereo phase offset** between the Left and Right Pitch LFOs. At `0°`, both channels sweep pitch together in mono; increasing `Phase` toward `180°` sweeps the Left and Right channels in opposite directions for wide stereo formant movement.
+- **`DIRTY`** (toggle in the module header, default **Off**):
+  Off: the pitch moves smoothly, updated every sample, for a clean sweep. On: the LFO is sampled once every 32 samples and held in between, so the pitch moves in tiny steps. Each step makes the tube length jump, adding a gritty zipper buzz around `sample rate / 32` (~1.4 kHz at 44.1 kHz) plus its harmonics. It's quiet on its own but comes forward strongly after one or more OTT / upward compressors, similar to Corpus.
 
 ### 4. Decay LFO
 A wavefolded, 32-sample stepped LFO that modulates the `Decay` knob position back and forth to create rhythmic feedback bursts and ~1.4 kHz control-rate zipper harmonics that multiband compressors (like OTT) pull forward aggressively.

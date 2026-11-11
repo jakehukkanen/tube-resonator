@@ -48,6 +48,9 @@ pub struct TubeResonatorParams {
     pub lfo_rate_hz: f32,
     /// Pitch LFO stereo phase offset in degrees (`0.0..=360.0`, default `0.0`).
     pub lfo_stereo_phase_deg: f32,
+    /// Pitch LFO `Dirty` mode: stair-step the pitch modulation at a 32-sample control rate
+    /// (default `false` = smooth per-sample modulation).
+    pub lfo_dirty: bool,
     /// Decay LFO modulation amount (`0.0..=1.0`, default `0.0`).
     pub decay_lfo_amount: f32,
     /// Decay LFO rate in Hz (`0.01..=30.0`, default `1.0 Hz`).
@@ -84,6 +87,7 @@ impl Default for TubeResonatorParams {
             lfo_amount: 0.50,
             lfo_rate_hz: 1.00,
             lfo_stereo_phase_deg: 0.0,
+            lfo_dirty: false,
             decay_lfo_amount: 0.0,
             decay_lfo_rate_hz: 1.00,
             filter_enabled: true,
@@ -221,6 +225,7 @@ impl TubeResonator {
                 params.lfo_amount as f64,
                 params.lfo_rate_hz as f64,
                 params.lfo_stereo_phase_deg as f64,
+                params.lfo_dirty,
                 sr,
             );
             let inst_decay_s = self.decay_lfo.next_decay_seconds(
