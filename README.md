@@ -18,9 +18,7 @@ A waveguide tube resonator with a softening bandpass filter similar to Ableton's
 ### From GitHub Actions / Pre-Built Releases
 Cross-platform builds for **macOS (`arm64`)**, **Windows (`x86_64`)**, and **Linux (`x86_64`)** are compiled automatically via [`.github/workflows/build.yml`](./.github/workflows/build.yml).
 
-Download them from the [Releases](../../releases) page:
-- **Versioned releases** (e.g. `v0.2.0`) are the stable builds.
-- **Nightly build** is a pre-release that's rebuilt from the latest commit on `main` after every push.
+Download them from the [Releases](../../releases) page. Each release is built from a version tag (e.g. `v0.2.0`).
 
 Each platform `.zip` contains `Tube Resonator.vst3`, `Tube Resonator.clap`, this README, and the [User Guide](./docs/USER_GUIDE.md).
 
@@ -29,7 +27,7 @@ Each platform `.zip` contains `Tube Resonator.vst3`, `Tube Resonator.clap`, this
 git tag v0.2.0
 git push origin v0.2.0
 ```
-Once all three platform builds succeed, the workflow creates the `v0.2.0` GitHub Release with auto-generated release notes and the platform archives attached. Tags containing a hyphen (e.g. `v0.2.0-beta.1`) are marked as pre-releases.
+Once all three platform builds succeed, the workflow creates the `v0.2.0` GitHub Release with auto-generated release notes and the platform archives attached. The macOS bundles' `Info.plist` version is taken from the tag (`v0.2.0` → `0.2.0`). Tags containing a hyphen (e.g. `v0.2.0-beta.1`) are marked as pre-releases. Their macOS bundle version drops the suffix (`0.2.0`), because Apple only allows numeric versions.
 
 ### Building Locally from Source
 ```bash
